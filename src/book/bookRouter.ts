@@ -14,7 +14,7 @@ const bookRouter = express.Router();
 // File Store Local -> Cloud -> Delete Local
 const upload = multer({
   dest: path.resolve(__dirname, '../../public/data/uploads'),
-  limits: { fieldSize: 3e7 }, // 30mb
+  limits: { fieldSize: 1e7 }, // 10mb
 });
 
 // Routes
