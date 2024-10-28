@@ -6,6 +6,7 @@ import cloudinary from '../config/cloudinary';
 import path from 'path';
 import fs from 'fs';
 import bookModel from './bookModel';
+import { AuthRequest } from '../middlewares/authenticate';
 
 const getBookList = async (req: Request, res: Response, next: NextFunction) => {
   res.json({ message: 'Get Book List' });
@@ -13,6 +14,9 @@ const getBookList = async (req: Request, res: Response, next: NextFunction) => {
 
 const createBook = async (req: Request, res: Response, next: NextFunction) => {
   const { title, genre } = req.body;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  console.log(req.userId);
   const files = req.files as { [filename: string]: Express.Multer.File[] };
 
   const coverImageMimeType = files.coverImage[0].mimetype.split('/').at(-1);
@@ -60,6 +64,7 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
     await fs.promises.unlink(bookFilePath);
 
     res.status(201).json({ id: newBook._id });
+    // res.json({ msg: 'msg' });
   } catch (error) {
     console.error('Error', error);
     return next(createHttpError(500, 'Error while uploading the files.'));
