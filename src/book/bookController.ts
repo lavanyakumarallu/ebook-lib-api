@@ -14,9 +14,6 @@ const getBookList = async (req: Request, res: Response, next: NextFunction) => {
 
 const createBook = async (req: Request, res: Response, next: NextFunction) => {
   const { title, genre } = req.body;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  console.log(req.userId);
   const files = req.files as { [filename: string]: Express.Multer.File[] };
 
   const coverImageMimeType = files.coverImage[0].mimetype.split('/').at(-1);
@@ -51,10 +48,11 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
       }
     );
 
+    const _req = req as AuthRequest;
     const newBook = await bookModel.create({
       title,
       genre,
-      author: '671e2c6b90c823b823999923',
+      author: _req.userId,
       coverImage: uploadResult.secure_url,
       file: bookFileUploadResult.secure_url,
     });
