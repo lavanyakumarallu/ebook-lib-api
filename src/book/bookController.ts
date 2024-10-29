@@ -11,8 +11,8 @@ import { AuthRequest } from '../middlewares/authenticate';
 const getBookList = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // todo pagination
-    const books = await bookModel.find({});
-    res.json({ books });
+    const books = await bookModel.find();
+    res.json(books);
   } catch (error) {
     return next(createHttpError(500, 'Error while getting books'));
   }
@@ -79,7 +79,10 @@ const getBook = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const bookId = req.params.bookId;
     const book = await bookModel.findOne({ _id: bookId });
-    res.json({ book });
+    if (!book) {
+      return next(createHttpError(404, 'book not found.'));
+    }
+    res.json(book);
   } catch (error) {
     return next(createHttpError(500, 'Error while getting a book'));
   }
@@ -129,7 +132,7 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
     );
     const uploadResult = await cloudinary.uploader.upload(filePath, {
       filename_override: filename,
-      folder: 'book-covers',
+      folder: 'book-pdfs',
       format: 'pdf',
     });
     completeFileName = uploadResult.secure_url;
@@ -151,7 +154,33 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
-  res.json({ message: 'Delete Book' });
+  try {
+    const bookId = req.params.bookId;
+    const book = await bookModel.findOne({ _id: bookId });
+    if (!book) {
+      return next(createHttpError(404, 'book not found.'));
+    }
+    const _req = req as AuthRequest;
+    if (book.author.toString() !== _req.userId) {
+      return next(createHttpError(403, 'Unauthorized'));
+    }
+
+    try {
+      const coverFileSplits = book.coverImage.split('/');
+      const coverImagePublicId =
+        coverFileSplits.at(-2) + '/' + coverFileSplits.at(-1)?.split('.').at(0);
+      const bookFileSplits = book.file.split('/');
+      const bookPublicId = bookFileSplits.at(-2) + '/' + bookFileSplits.at(-1);
+      await cloudinary.uploader.destroy(coverImagePublicId);
+      await cloudinary.uploader.destroy(bookPublicId, { resource_type: 'raw' });
+    } catch (error) {
+      return next(createHttpError(500, 'Error while deleting a book files'));
+    }
+    await bookModel.deleteOne({ _id: bookId });
+    res.sendStatus(204);
+  } catch (error) {
+    return next(createHttpError(500, 'Error while deleting a book'));
+  }
 };
 
 export { getBookList, createBook, getBook, updateBook, deleteBook };

@@ -29,7 +29,7 @@ bookRouter.post(
   ]),
   createBook
 );
-bookRouter.get('/:bookId', authenticate, getBook);
+bookRouter.get('/:bookId', getBook);
 bookRouter.patch(
   '/:bookId',
   authenticate,
@@ -39,6 +39,6 @@ bookRouter.patch(
   ]),
   updateBook
 );
-bookRouter.delete('/:bookId', deleteBook);
+bookRouter.delete('/:bookId', authenticate, deleteBook);
 
 export default bookRouter;
