@@ -29,8 +29,16 @@ bookRouter.post(
   ]),
   createBook
 );
-bookRouter.get('/{id}', getBook);
-bookRouter.put('/{id}', updateBook);
-bookRouter.delete('/{id}', deleteBook);
+bookRouter.get('/:bookId', authenticate, getBook);
+bookRouter.patch(
+  '/:bookId',
+  authenticate,
+  upload.fields([
+    { name: 'coverImage', maxCount: 1 },
+    { name: 'file', maxCount: 1 },
+  ]),
+  updateBook
+);
+bookRouter.delete('/:bookId', deleteBook);
 
 export default bookRouter;
